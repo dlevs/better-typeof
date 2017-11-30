@@ -2,7 +2,7 @@ const { toString } = {};
 
 /**
  * Get the type of a value.
- * Like the typeof operator, but it provides more useful type descriptions.
+ * Like the typeof operator, but with more useful type descriptions.
  *
  * @example
  * typeof {}          // object
@@ -15,31 +15,31 @@ const { toString } = {};
  * betterTypeof(null) // null
  * betterTypeof([])   // array
  *
- * @param {*} value
- * @param {Array<"number"|"function">} specificTypes
- * @returns {string}
+ * @param {*} value Value to test
+ * @param {boolean} [beSpecific] Types to return more specific values for
+ * @return {string} Type of `value`
  */
-const betterTypeof = (value, specificTypes = []) => {
+const betterTypeof = (value, beSpecific = false) => {
 	const type = typeof value;
 
-	if (
-		type === 'number' &&
-		specificTypes.includes('number') &&
-		Number.isNaN(value)
-	) {
-		return 'nan';
+	if (type === 'number') {
+		if (
+			value === Number.POSITIVE_INFINITY ||
+			value === Number.NEGATIVE_INFINITY
+		) {
+			return 'infinity';
+		}
+
+		if (Number.isNaN(value)) {
+			return 'nan';
+		}
 	}
 
-	if (
-		(type === 'function' && specificTypes.includes('function')) ||
-		type !== 'object'
-	) {
+	if (!beSpecific && type === 'function') {
 		return type;
 	}
 
-	return toString.call(value)
-		.slice(8, -1)
-		.toLowerCase();
+	return toString.call(value).slice(8, -1).toLowerCase();
 };
 
 module.exports = betterTypeof;

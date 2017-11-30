@@ -1,27 +1,25 @@
-import regeneratorRuntime from 'regenerator-runtime';
-import betterTypeof from './betterTypeof';
-import each from 'lodash/each';
-import isPlainObject from 'lodash/isPlainObject';
 
+/* eslint-disable */
 
-// These tests are less about testing the actual function,
-// and more of a learning exercise to capture the current behaviour
-// of the function.
-//
-// There are some environment-dependant quirks if always using the
-// result of Object.prototype.toString.call() on an object:
-//
-// - document.createElement('div')
-//   - is "htmldivelement" in the browser.
-//   - is "object" with jest
-//
-// - function* () {}
-//   - is "generatorfunction" in environments that support it
-//   - is "function" if being polyfilled // TODO: check that this is true, and it's not "object"
-//
-// - async () => {}
-//   - is "asyncfunction" in environments that support it
-//   - is "function" if being polyfilled // TODO: check that this is true, and it's not "object"
+const each = require('lodash/each');
+const isPlainObject = require('lodash/isPlainObject');
+const betterTypeof = require('.');
+
+/* There are some environment-dependant quirks when using the
+ * result of Object.prototype.toString.call() on a value:
+ *
+ * - function* () {}
+ *   - is "generatorfunction" in environments that support it
+ *   - may be "function" if being transpiled
+ *
+ * - async () => {}
+ *   - is "asyncfunction" in environments that support it
+ *   - may be "function" if being transpiled
+ *
+ * - document.createElement('div')
+ *   - is "htmldivelement" in the browser.
+ *   - is "object" in the Jest test environment
+ */
 
 class Foo {
 }
@@ -30,7 +28,6 @@ class Bar {
 		return 'Bar';
 	}
 }
-
 const expectedResults = {
 	'array': {
 		'plain': [],
@@ -52,11 +49,10 @@ const expectedResults = {
 		'arrow functions': () => {
 		},
 		'async arrow functions': async () => {
-		}
+		},
 	},
 	'number': {
-		'infinity': Number.POSITIVE_INFINITY,
-		'built with constructor': new Number(),
+		'built with constructor': new Number(10),
 
 		// All of the following ar just normal numbers
 		'integers': 1,
@@ -64,6 +60,10 @@ const expectedResults = {
 		'floats': 0.5,
 		'octal': 0x10,
 		'exponential': 1e10
+	},
+	'infinity': {
+		'positive': Number.POSITIVE_INFINITY,
+		'negative': Number.NEGATIVE_INFINITY
 	},
 	'object': {
 		'plain': {},
@@ -102,35 +102,25 @@ const expectedResults = {
 	'json': JSON,
 	'set': new Set(),
 	'map': new Map(),
-	'weakmap': new WeakMap()
+	'weakmap': new WeakMap(),
 };
 
 
 
 describe('betterTypeof()', () => {
-
 	each(expectedResults, (valuesToTest, expectedType) => {
-
 		if (isPlainObject(valuesToTest)) {
-
 			describe(`returns "${expectedType}" for ${expectedType}s that are`, () => {
-
 				each(valuesToTest, (valueToTest, description) => {
 					test(description, () => {
 						expect(betterTypeof(valueToTest)).toBe(expectedType);
 					});
 				});
-
-			})
-
-		} else {
-
-			test(`returns "${expectedType}" for ${expectedType} values`, () => {
-				expect(betterTypeof(valuesToTest)).toBe(expectedType);
 			});
-
+		} else {
+			test(`returns "${expectedType}" for ${expectedType} values`, () => {
+				expect(betterTypeof(valuesToTest, true)).toBe(expectedType);
+			});
 		}
-
 	});
-
 });
