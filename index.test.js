@@ -1,12 +1,5 @@
-
-/* eslint-disable */
-
-const each = require('lodash/each');
-const isPlainObject = require('lodash/isPlainObject');
-const betterTypeof = require('.');
-
-/* There are some environment-dependant quirks when using the
- * result of Object.prototype.toString.call() on a value:
+/* Note, there are some environment-dependant quirks when using
+ * the result of Object.prototype.toString.call() on a value:
  *
  * - function* () {}
  *   - is "generatorfunction" in environments that support it
@@ -21,13 +14,19 @@ const betterTypeof = require('.');
  *   - is "object" in the Jest test environment
  */
 
+const each = require('lodash/each');
+const isPlainObject = require('lodash/isPlainObject');
+const betterTypeof = require('.');
+
 class Foo {
 }
+
 class Bar {
 	toString() {
 		return 'Bar';
 	}
 }
+
 const expectedResults = {
 	'array': {
 		'plain': [],
@@ -52,6 +51,8 @@ const expectedResults = {
 		},
 	},
 	'number': {
+		'positive infinity': Number.POSITIVE_INFINITY,
+		'negative infinity': Number.NEGATIVE_INFINITY,
 		'built with constructor': new Number(10),
 
 		// All of the following ar just normal numbers
@@ -60,10 +61,6 @@ const expectedResults = {
 		'floats': 0.5,
 		'octal': 0x10,
 		'exponential': 1e10
-	},
-	'infinity': {
-		'positive': Number.POSITIVE_INFINITY,
-		'negative': Number.NEGATIVE_INFINITY
 	},
 	'object': {
 		'plain': {},
@@ -105,22 +102,52 @@ const expectedResults = {
 	'weakmap': new WeakMap(),
 };
 
+const expectedResultsSpecific = {
+	...expectedResults,
+	// Overwrite existing function property
+	'function': {
+		'anonymous functions': function () {
+		},
+		'named functions': function foo() {
+		},
+		'arrow functions': () => {
+		},
+	},
+	'asyncfunction': {
+		'async functions': async function () {
+		},
+		'async arrow functions': async () => {
+		},
+	},
+	'generatorfunction': {
+		'generator functions': function*() {
+		},
+	}
+};
 
-
-describe('betterTypeof()', () => {
-	each(expectedResults, (valuesToTest, expectedType) => {
+const testTypes = (types, fn) => {
+	each(types, (valuesToTest, expectedType) => {
 		if (isPlainObject(valuesToTest)) {
 			describe(`returns "${expectedType}" for ${expectedType}s that are`, () => {
 				each(valuesToTest, (valueToTest, description) => {
 					test(description, () => {
-						expect(betterTypeof(valueToTest)).toBe(expectedType);
+						expect(fn(valueToTest)).toBe(expectedType);
 					});
 				});
 			});
 		} else {
 			test(`returns "${expectedType}" for ${expectedType} values`, () => {
-				expect(betterTypeof(valuesToTest, true)).toBe(expectedType);
+				expect(fn(valuesToTest)).toBe(expectedType);
 			});
 		}
+	});
+}
+
+describe('betterTypeof()', () => {
+	describe('default behaviour', () => {
+		testTypes(expectedResults, betterTypeof);
+	});
+	describe('with `specific` flag enabled', () => {
+		testTypes(expectedResultsSpecific, value => betterTypeof(value, true));
 	});
 });

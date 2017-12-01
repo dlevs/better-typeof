@@ -4,38 +4,18 @@ const { toString } = {};
  * Get the type of a value.
  * Like the typeof operator, but with more useful type descriptions.
  *
- * @example
- * typeof {}          // object
- * typeof /a/         // object
- * typeof null        // object
- * typeof []          // object
- *
- * betterTypeof({})   // object
- * betterTypeof(/a/)  // regexp
- * betterTypeof(null) // null
- * betterTypeof([])   // array
- *
  * @param {*} value Value to test
- * @param {boolean} [beSpecific] Types to return more specific values for
+ * @param {boolean} [specific] Set to `true` for more specific results
  * @return {string} Type of `value`
  */
-const betterTypeof = (value, beSpecific = false) => {
+const betterTypeof = (value, specific = false) => {
 	const type = typeof value;
 
-	if (type === 'number') {
-		if (
-			value === Number.POSITIVE_INFINITY ||
-			value === Number.NEGATIVE_INFINITY
-		) {
-			return 'infinity';
-		}
-
-		if (Number.isNaN(value)) {
-			return 'nan';
-		}
+	if (type === 'number' && Number.isNaN(value)) {
+		return 'nan';
 	}
 
-	if (!beSpecific && type === 'function') {
+	if (type === 'function' && !specific) {
 		return type;
 	}
 
