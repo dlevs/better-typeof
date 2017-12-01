@@ -15,6 +15,10 @@
     "type",
     "check"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dlevs/better-typeof"
+  },
   "author": "Daniel Levett <dlevett@hotmail.co.uk>",
   "license": "ISC"
 }
