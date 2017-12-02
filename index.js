@@ -5,17 +5,12 @@ const { toString } = {};
  * Like the typeof operator, but with more useful type descriptions.
  *
  * @param {*} value Value to test
- * @param {boolean} [specific] Set to `true` for more specific results
  * @return {string} Type of `value`
  */
-const betterTypeof = (value, specific = false) => {
+const betterTypeof = (value) => {
 	const type = typeof value;
 
-	if (type === 'number' && Number.isNaN(value)) {
-		return 'nan';
-	}
-
-	if (type === 'function' && !specific) {
+	if (type !== 'object') {
 		return type;
 	}
 

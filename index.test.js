@@ -13,19 +13,9 @@
  *   - is "htmldivelement" in the browser.
  *   - is "object" in the Jest test environment
  */
-
 const each = require('lodash/each');
 const isPlainObject = require('lodash/isPlainObject');
 const betterTypeof = require('.');
-
-class Foo {
-}
-
-class Bar {
-	toString() {
-		return 'Bar';
-	}
-}
 
 const expectedResults = {
 	'array': {
@@ -60,13 +50,27 @@ const expectedResults = {
 		'negative integers': -1,
 		'floats': 0.5,
 		'octal': 0x10,
-		'exponential': 1e10
+		'exponential': 1e10,
+		'NaN': NaN,
 	},
 	'object': {
 		'plain': {},
 		'built with constructor': new Object(),
-		'class instances': new Foo(),
-		'class instances with a custom "toString" method': new Bar()
+		'class instances': (() => {
+			class Foo {
+			}
+
+			return new Foo();
+		})(),
+		'class instances with a custom "toString" method': (() => {
+			class Foo {
+				toString() {
+					return 'Bar';
+				}
+			}
+
+			return new Foo();
+		})(),
 	},
 	'error': {
 		'caught native errors': (() => {
@@ -91,7 +95,6 @@ const expectedResults = {
 		'built with constructor': new Boolean()
 	},
 	'promise': Promise.resolve(),
-	'nan': NaN,
 	'undefined': undefined,
 	'null': null,
 	'date': new Date(),
@@ -102,52 +105,20 @@ const expectedResults = {
 	'weakmap': new WeakMap(),
 };
 
-const expectedResultsSpecific = {
-	...expectedResults,
-	// Overwrite existing function property
-	'function': {
-		'anonymous functions': function () {
-		},
-		'named functions': function foo() {
-		},
-		'arrow functions': () => {
-		},
-	},
-	'asyncfunction': {
-		'async functions': async function () {
-		},
-		'async arrow functions': async () => {
-		},
-	},
-	'generatorfunction': {
-		'generator functions': function*() {
-		},
-	}
-};
-
-const testTypes = (types, fn) => {
-	each(types, (valuesToTest, expectedType) => {
+describe('betterTypeof()', () => {
+	each(expectedResults, (valuesToTest, expectedType) => {
 		if (isPlainObject(valuesToTest)) {
 			describe(`returns "${expectedType}" for ${expectedType}s that are`, () => {
 				each(valuesToTest, (valueToTest, description) => {
 					test(description, () => {
-						expect(fn(valueToTest)).toBe(expectedType);
+						expect(betterTypeof(valueToTest)).toBe(expectedType);
 					});
 				});
 			});
 		} else {
 			test(`returns "${expectedType}" for ${expectedType} values`, () => {
-				expect(fn(valuesToTest)).toBe(expectedType);
+				expect(betterTypeof(valuesToTest)).toBe(expectedType);
 			});
 		}
-	});
-}
-
-describe('betterTypeof()', () => {
-	describe('default behaviour', () => {
-		testTypes(expectedResults, betterTypeof);
-	});
-	describe('with `specific` flag enabled', () => {
-		testTypes(expectedResultsSpecific, value => betterTypeof(value, true));
 	});
 });
